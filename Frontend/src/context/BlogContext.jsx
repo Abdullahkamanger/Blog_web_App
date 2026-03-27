@@ -66,7 +66,7 @@ export const BlogProvider = ({ children }) => {
     const fetchBlogs = async () => {
       setLoading(true);
       try {
-        const res = await axios.get("http://localhost:8000/api/blogs");
+        const res = await axios.get("https://blog-web-app-eight-omega.vercel.app/api/blogs/api/blogs");
         const dbBlogs = res.data.map((b) => ({
           ...b,
           // Normalize DB structure to match Mock structure
