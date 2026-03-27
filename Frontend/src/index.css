@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+/* Force Tailwind v4 to use the manual class toggle instead of the OS media query */
+@custom-variant dark (&:is(.dark *));
+
+/* --- Editor.js Professional Dark Mode Fixes --- */
+.dark .ce-toolbar__plus, 
+.dark .ce-toolbar__settings-btn,
+.dark .ce-conversion-toolbar,
+.dark .ce-inline-toolbar,
+.dark .ce-settings,
+.dark .ce-popover {
+  background-color: #1e293b !important; /* slate-800 */
+  color: #f1f5f9 !important; /* slate-100 */
+  border-color: #334155 !important; /* slate-700 */
+}
+
+.dark .ce-toolbar__plus:hover,
+.dark .ce-toolbar__settings-btn:hover,
+.dark .ce-popover__item:hover {
+  background-color: #334155 !important;
+}
+
+.dark .ce-popover__item-icon,
+.dark .ce-toolbar__plus svg,
+.dark .ce-toolbar__settings-btn svg {
+  color: #f1f5f9 !important;
+}
+
+.dark .ce-block--selected .ce-block__content {
+  background: rgba(99, 102, 241, 0.1) !important; /* indigo-500/10 */
+}
+
+/* Editor Placeholder styling */
+.codex-editor--empty .ce-block:first-child .ce-paragraph:before {
+  color: #94a3b8 !important; /* slate-400 */
+  font-style: italic;
+  content: "Write something extraordinary..." !important;
+}
+
+.dark .codex-editor--empty .ce-block:first-child .ce-paragraph:before {
+  color: #475569 !important; /* slate-600 */
+}
+
+/* Make images and other blocks more centered */
+.ce-block__content, 
+.ce-toolbar__content {
+  max-width: 800px;
+}
+
