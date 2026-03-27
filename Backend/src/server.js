@@ -42,6 +42,10 @@ app.get('/api/health', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () =>  console.log(`🚀 Server running on http://localhost:${PORT}`));
+}
+
+
+// THIS IS THE MOST IMPORTANT LINE FOR VERCEL
+export default app;
