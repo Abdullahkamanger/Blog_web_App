@@ -1,7 +1,7 @@
 import express from 'express';
 import multer from 'multer';
 import path from 'path';
-import { createBlog, getPublicBlogs } from '../controllers/blogController.js';
+import { createBlog, getPublicBlogs, getBlogById, toggleLike, toggleDislike, toggleSave } from '../controllers/blogController.js';
 import { verifyToken, isAuthor } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
@@ -19,8 +19,16 @@ const upload = multer({ storage });
 // Public can see approved blogs
 router.get('/', getPublicBlogs);
 
+// Get single blog
+router.get('/:id', getBlogById);
+
 // Only Approved Authors or Admins can create
 router.post('/', verifyToken, isAuthor, createBlog);
+
+// Interaction routes
+router.post('/:id/like', verifyToken, toggleLike);
+router.post('/:id/dislike', verifyToken, toggleDislike);
+router.post('/:id/save', verifyToken, toggleSave);
 
 // 2. The Image Upload Endpoint (Secured and Standardized)
 router.post('/upload-image', verifyToken, isAuthor, upload.single('image'), (req, res) => {
