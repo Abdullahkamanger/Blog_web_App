@@ -27,6 +27,7 @@ export const BlogProvider = ({ children }) => {
     setToken(null);
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    localStorage.removeItem("user-activity"); // Clear interaction states
     window.location.href = "/login";
   };
 
@@ -81,9 +82,9 @@ export const BlogProvider = ({ children }) => {
             day: 'numeric', 
             year: 'numeric' 
           }),
-          likes: b.likes || 0,
-          dislikes: b.dislikes || 0,
-          saves: b.saves || 0
+          likes: b.likes_count || 0,
+          dislikes: b.dislikes_count || 0,
+          saves: b.saves_count || 0
         }));
         
         // Merge real database data with mock data
@@ -100,92 +101,123 @@ export const BlogProvider = ({ children }) => {
     fetchBlogs();
   }, []);
 
-  // Persistence
-  useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("user-activity")) || {
-      L: [],
-      S: [],
-      D: [],
-    };
-    setLikedIds(data.L);
-    setSavedIds(data.S);
-    setDislikedIds(data.D);
-  }, []);
+  // Fetch user interactions on login
+  const fetchUserInteractions = async () => {
+    if (!token) return;
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/interactions`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const interactions = res.data;
+      const liked = interactions.filter(i => i.type === 'LIKE').map(i => i.blog_id);
+      const disliked = interactions.filter(i => i.type === 'DISLIKE').map(i => i.blog_id);
+      const saved = interactions.filter(i => i.type === 'SAVE').map(i => i.blog_id);
+      setLikedIds(liked);
+      setSavedIds(saved);
+      setDislikedIds(disliked);
+    } catch (err) {
+      console.error("Failed to fetch user interactions:", err);
+    }
+  };
 
   useEffect(() => {
-    localStorage.setItem(
-      "user-activity",
-      JSON.stringify({ L: likedIds, S: savedIds, D: dislikedIds }),
-    );
-  }, [likedIds, savedIds, dislikedIds]);
+    if (user && token) {
+      fetchUserInteractions();
+    }
+  }, [user, token]);
 
-  // const toggleLike = (id) => setLikedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  // const toggleSave = (id) => setSavedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  // const toggleDislike = (id) => setDislikedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  // Toggle Like with Database Simulation
-  const toggleLike = (id) => {
+  // Toggle Like with Backend Call
+  const toggleLike = async (id) => {
+    if (!token) return; // Require login
+
     const isCurrentlyLiked = likedIds.includes(id);
 
-    // 1. Update the User's Liked List
-    setLikedIds((prev) =>
-      isCurrentlyLiked ? prev.filter((i) => i !== id) : [...prev, id],
-    );
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/blogs/${id}/like`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    // 2. Update the "Database" (The blogs state)
-    setBlogs((currentBlogs) =>
-      currentBlogs.map((blog) => {
-        if (blog.id === id) {
-          return {
-            ...blog,
-            likes: isCurrentlyLiked ? blog.likes - 1 : blog.likes + 1,
-          };
-        }
-        return blog;
-      }),
-    );
+      // Update local state based on response
+      setLikedIds((prev) =>
+        isCurrentlyLiked ? prev.filter((i) => i !== id) : [...prev, id],
+      );
+
+      // Update the blogs state with new count
+      setBlogs((currentBlogs) =>
+        currentBlogs.map((blog) => {
+          if (blog.id === id) {
+            return {
+              ...blog,
+              likes: res.data.likes_count,
+            };
+          }
+          return blog;
+        }),
+      );
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
   };
 
-  // Toggle Dislike with Database Simulation
-  const toggleDislike = (id) => {
+  // Toggle Dislike with Backend Call
+  const toggleDislike = async (id) => {
+    if (!token) return;
+
     const isCurrentlyDisliked = dislikedIds.includes(id);
 
-    setDislikedIds((prev) =>
-      isCurrentlyDisliked ? prev.filter((i) => i !== id) : [...prev, id],
-    );
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/blogs/${id}/dislike`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    setBlogs((currentBlogs) =>
-      currentBlogs.map((blog) => {
-        if (blog.id === id) {
-          return {
-            ...blog,
-            dislikes: isCurrentlyDisliked
-              ? blog.dislikes - 1
-              : blog.dislikes + 1,
-          };
-        }
-        return blog;
-      }),
-    );
+      setDislikedIds((prev) =>
+        isCurrentlyDisliked ? prev.filter((i) => i !== id) : [...prev, id],
+      );
+
+      setBlogs((currentBlogs) =>
+        currentBlogs.map((blog) => {
+          if (blog.id === id) {
+            return {
+              ...blog,
+              dislikes: res.data.dislikes_count,
+            };
+          }
+          return blog;
+        }),
+      );
+    } catch (err) {
+      console.error("Failed to toggle dislike:", err);
+    }
   };
 
-  const toggleSave = (id) => {
+  const toggleSave = async (id) => {
+    if (!token) return;
+
     const isCurrentlySaved = savedIds.includes(id);
 
-    setSavedIds((prev) =>
-      isCurrentlySaved ? prev.filter((i) => i !== id) : [...prev, id],
-    );
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/blogs/${id}/save`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
 
-    setBlogs((currentBlogs) =>
-      currentBlogs.map((blog) => {
-        if (blog.id === id) {
-          return {
-            ...blog,
-            saves: isCurrentlySaved ? blog.saves - 1 : blog.saves + 1,
-          };
-        }
-        return blog;
-      }),
-    );
+      setSavedIds((prev) =>
+        isCurrentlySaved ? prev.filter((i) => i !== id) : [...prev, id],
+      );
+
+      setBlogs((currentBlogs) =>
+        currentBlogs.map((blog) => {
+          if (blog.id === id) {
+            return {
+              ...blog,
+              saves: res.data.saves_count,
+            };
+          }
+          return blog;
+        }),
+      );
+    } catch (err) {
+      console.error("Failed to toggle save:", err);
+    }
   };
   return (
     <BlogContext.Provider
