@@ -48,3 +48,13 @@ export const login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export const getUserInteractions = async (req, res) => {
+  const userId = req.user.id;
+  try {
+    const [interactions] = await db.query('SELECT * FROM interactions WHERE user_id = ?', [userId]);
+    res.json(interactions);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
