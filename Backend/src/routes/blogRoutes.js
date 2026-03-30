@@ -43,11 +43,44 @@ router.post('/:id/save', verifyToken, toggleSave);
 router.post('/upload-image', verifyToken, isAuthor, upload.single('image'), (req, res) => {
   if (!req.file) return res.status(400).json({ success: 0, message: 'No file uploaded' });
   
-  // Cloudinary returns secure HTTPS URL directly
   res.json({
     success: 1,
     file: { 
       url: req.file.path // This is already a full HTTPS URL from Cloudinary
+    },
+  });
+});
+
+// New route for EditorJS byFile upload and legacy compatibility
+router.post('/upload-by-file', verifyToken, isAuthor, upload.single('image'), (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ success: 0, message: 'No file uploaded' });
+    res.json({
+      success: 1,
+      file: {
+        url: req.file.path,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: 0, message: err.message });
+  }
+});
+
+// Optional: byUrl pass-through for EditorJS URL uploads
+router.post('/upload-by-url', verifyToken, isAuthor, (req, res) => {
+  try {
+    const { url } = req.body;
+    if (!url) return res.status(400).json({ success: 0, message: 'URL missing' });
+    res.json({
+      success: 1,
+      file: {
+        url,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ success: 0, message: err.message });
+  }
+});
     },
   });
 });

@@ -36,7 +36,8 @@ const Editor = ({ data, onChange }) => {
             class: ImageTool,
             config: {
               endpoints: {
-                byFile: `${import.meta.env.VITE_API_URL}/api/blogs/upload-image`,
+                byFile: `${import.meta.env.VITE_API_URL}/api/blogs/upload-by-file`, // for select/drag-drop
+                byUrl: `${import.meta.env.VITE_API_URL}/api/blogs/upload-by-url`,   // for URL option
               },
               additionalRequestHeaders: {
                 Authorization: `Bearer ${localStorage.getItem('token')}`
