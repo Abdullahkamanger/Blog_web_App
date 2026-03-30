@@ -31,10 +31,12 @@ const { blogs, loading, error } = useBlogs();
   );
 
   // FILTER LOGIC
-  const filteredBlogs = blogs.filter((blog) => {
-    const matchesCategory = activeCategory === "All" || blog.category === activeCategory;
-    const matchesSearch = blog.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          blog.description.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredBlogs = (Array.isArray(blogs) ? blogs : []).filter((blog) => {
+    const matchesCategory = activeCategory === "All" || blog?.category === activeCategory;
+    const title = blog?.title?.toLowerCase() || '';
+    const description = blog?.description?.toLowerCase() || '';
+    const search = searchQuery?.toLowerCase() || '';
+    const matchesSearch = title.includes(search) || description.includes(search);
     return matchesCategory && matchesSearch;
   });
 

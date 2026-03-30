@@ -5,7 +5,7 @@ const BlockRenderer = ({ blocks }) => {
     switch (block.type) {
       case 'header': {
         const Tag = `h${block.data.level}`;
-        const id = block.data.text.toLowerCase().replace(/ /g, '-');
+        const id = (block?.data?.text?.toLowerCase() || 'heading').replace(/ /g, '-');
         const sizeClass = {
           2: 'text-4xl md:text-5xl',
           3: 'text-3xl md:text-4xl',
