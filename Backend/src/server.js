@@ -15,8 +15,31 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
-app.use(cors());
+// Middleware - robust CORS for both browser and serverless environments
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow same-origin or explicit frontend app origin in production
+    if (!origin || origin === 'https://abdullah-codeblog.vercel.app' || origin === 'https://blog-web-app-eight-omega.vercel.app') {
+      callback(null, true);
+    } else {
+      callback(null, true); // set to false to restrict origins
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true,
+}));
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(express.json());
 
 // Serve uploaded images statically
@@ -45,7 +68,10 @@ const PORT = process.env.PORT || 8000;
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () =>  console.log(`🚀 Server running on http://localhost:${PORT}`));
 }
-
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err.stack || err);
+  res.status(500).json({ success: 0, message: err.message || 'Internal Server Error' });
+});
 
 // THIS IS THE MOST IMPORTANT LINE FOR VERCEL
 export default app;
