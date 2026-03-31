@@ -81,8 +81,5 @@ router.post('/upload-by-url', verifyToken, isAuthor, (req, res) => {
     res.status(500).json({ success: 0, message: err.message });
   }
 });
-    },
-  });
-});
 
 export default router;
